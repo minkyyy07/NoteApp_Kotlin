@@ -96,6 +96,14 @@ class NotesViewModel : ViewModel() {
             _notes[index] = _notes[index].copy(isArchived = true)
         }
     }
+
+    fun unarchiveNote(noteId: Long) {
+        val index = _notes.indexOfFirst { it.id == noteId }
+        if (index != -1) {
+            _notes[index] = _notes[index].copy(isArchived = false)
+        }
+    }
+
     val archivedNotes: List<Note>
         get() = _notes.filter { it.isArchived }
 
