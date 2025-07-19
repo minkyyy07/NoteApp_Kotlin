@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import java.util.Date
 
-enum class SetOrder {
+enum class SortOrder {
     DATE_NEWEST,
     DATE_OLDEST,
     TITLE_A_Z,
@@ -26,7 +26,7 @@ class NotesViewModel : ViewModel() {
     private val _selectedCategory = mutableStateOf("Все")
     val selectedCategory: State<String> = _selectedCategory
 
-    fun addNote(title: String, content: String = "Общие") {
+    fun addNote(title: String, content: String = "", category: String = "Общие") {
         _notes.add(Note(title = title, content = content, category = category))
     }
 
@@ -39,7 +39,7 @@ class NotesViewModel : ViewModel() {
         if (index != -1) {
             _notes[index] = _notes[index].copy(
                 title = newTitle,
-                content = newContent
+                content = newContent,
                 updatedAt = System.currentTimeMillis()
             )
         }
@@ -59,7 +59,7 @@ class NotesViewModel : ViewModel() {
 
     val filteredNotes: List<Note>
         get() {
-            var filtered = if (_selectedCategory.value != "Все") {
+            var filtered = if (_selectedCategory.value == "Все") {
                 _notes.filter { !it.isArchived }
             } else {
                 _notes.filter { it.category == _selectedCategory.value && !it.isArchived }
@@ -80,5 +80,59 @@ class NotesViewModel : ViewModel() {
             }
         }
 
+    fun togglePinNote(noteId: Long) {
+        val index = _notes.indexOfFirst { it.id == noteId }
+        if (index != -1) {
+            _notes[index] = _notes[index].copy(isPinned = !_notes[index].isPinned)
+        }
+    }
 
+    val pinnedNotes: List<Note>
+        get() = _notes.filter { it.isPinned && !it.isArchived }
+
+    fun archiveNote(noteId: Long) {
+        val index = _notes.indexOfFirst { it.id == noteId }
+        if (index != -1) {
+            _notes[index] = _notes[index].copy(isArchived = false)
+        }
+    }
+    val archivedNotes: List<Note>
+        get() = _notes.filter { it.isArchived }
+
+    // Color
+    fun updateNoteColor(noteId: Long, color: NoteColor) {
+        val index = _notes.indexOfFirst { it.id == noteId }
+        if (index != -1) {
+            _notes[index] = _notes[index].copy(color = color)
+        }
+    }
+
+    // Category
+    fun getUniqueCategories(): List<String> {
+        return _notes.map { it.category }.distinct().sorted()
+    }
+
+    fun getAllCategories(): List<String> {
+        return listOf("Все") + getUniqueCategories()
+    }
+
+    // Stats
+    fun getNotesStatistics(): NotesStatistics {
+        return NotesStatistics(
+            totalNotes = _notes.filter { !it.isArchived }.size,
+            pinnedNotes = _notes.count { it.isPinned && !it.isArchived },
+            archivedNotes = _notes.count { it.isArchived },
+            categoriesCount = getUniqueCategories().size,
+            averageWordsPerNote = if (_notes.isNotEmpty()) {
+                _notes.filter { !it.isArchived }.map { it.content.split(" ").size }.average()
+            } else 0.0
+        )
+    }
+
+    // Export
+    fun exportNotesToText(): String {
+        return _notes.filter { !it.isArchived }.joinToString("\n") { note ->
+            "=== ${note.title} ===\n${note.content}\n[${Date(note.createdAt)}]\nКатегория: ${note.category}"
+        }
+    }
 }
