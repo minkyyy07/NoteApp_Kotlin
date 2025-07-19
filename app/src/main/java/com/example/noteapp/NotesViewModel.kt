@@ -93,7 +93,7 @@ class NotesViewModel : ViewModel() {
     fun archiveNote(noteId: Long) {
         val index = _notes.indexOfFirst { it.id == noteId }
         if (index != -1) {
-            _notes[index] = _notes[index].copy(isArchived = false)
+            _notes[index] = _notes[index].copy(isArchived = true)
         }
     }
     val archivedNotes: List<Note>
