@@ -1,5 +1,6 @@
 package com.example.noteapp.ui.theme
 
+import androidx.compose.ui.graphics.Color
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -10,6 +11,13 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+
+val AppPrimary = Color(0xFF4F8FF9)      // Пример: синий
+val AppSecondary = Color(0xFFB3CFFF)    // Светло-синий
+val AppBackground = Color(0xFFF6F8FB)   // Светлый фон
+val AppSurface = Color(0xFFFFFFFF)      // Белый
+val AppOnPrimary = Color(0xFFFFFFFF)    // Белый для текста на primary
+val AppOnBackground = Color(0xFF222B45)// Тёмный текст
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,

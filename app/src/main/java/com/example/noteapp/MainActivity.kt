@@ -24,10 +24,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -39,6 +39,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.noteapp.ui.theme.NoteAppTheme
 import kotlin.math.roundToInt
+import androidx.compose.material3.lightColorScheme
+import com.example.noteapp.ui.theme.AppBackground
+import com.example.noteapp.ui.theme.AppOnBackground
+import com.example.noteapp.ui.theme.AppOnPrimary
+import com.example.noteapp.ui.theme.AppPrimary
+import com.example.noteapp.ui.theme.AppSecondary
+import com.example.noteapp.ui.theme.AppSurface
+
+val AppColorScheme = lightColorScheme(
+    primary = AppPrimary,
+    onPrimary = AppOnPrimary,
+    secondary = AppSecondary,
+    background = AppBackground,
+    surface = AppSurface,
+    onBackground = AppOnBackground,
+    // можно добавить другие параметры по желанию
+)
 
 // Placeholder components - you'll need to implement these or use actual libraries
 @Composable
@@ -82,7 +99,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            NoteAppTheme {
+            NoteAppTheme(
+                darkTheme = false, // Можно сделать динамическим, если нужно
+                dynamicColor = false // Используем свою палитру
+            ) {
                 NotesScreen(viewModel = viewModel)
             }
         }
@@ -108,13 +128,13 @@ fun NotesScreen(viewModel: NotesViewModel) {
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .background(color = Color(0xFFD7BCE8))
+            .background(color = MaterialTheme.colorScheme.background)
     ) {
         // Top bar with archive/statistics buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFFDE2FF))
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -122,14 +142,15 @@ fun NotesScreen(viewModel: NotesViewModel) {
             Text(
                 if (showArchive) "Архив" else "Мои заметки",
                 fontWeight = FontWeight.Bold,
-                fontSize = 22.sp
+                fontSize = 22.sp,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Row {
                 IconButton(onClick = { showArchive = !showArchive }) {
-                    Icon(Icons.Default.Archive, contentDescription = "Архив")
+                    Icon(Icons.Default.Archive, contentDescription = "Архив", tint = MaterialTheme.colorScheme.primary)
                 }
                 IconButton(onClick = { showStatistics = true }) {
-                    Icon(Icons.Default.BarChart, contentDescription = "Статистика")
+                    Icon(Icons.Default.BarChart, contentDescription = "Статистика", tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }
@@ -192,8 +213,8 @@ fun NotesScreen(viewModel: NotesViewModel) {
         ) {
             FloatingActionButton(
                 onClick = { showDialog = true },
-                containerColor = Color(0xFF8884FF),
-                contentColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.padding(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Добавить заметку")
@@ -227,18 +248,39 @@ fun SearchBar(
     OutlinedTextField(
         value = searchQuery,
         onValueChange = onSearchQueryChange,
-        label = { Text("Поиск заметок") },
+        label = { Text("Поиск заметок", color = MaterialTheme.colorScheme.onSurface) },
         leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = "Поиск")
+            Icon(Icons.Default.Search, contentDescription = "Поиск", tint = MaterialTheme.colorScheme.primary)
         },
         trailingIcon = {
             if (searchQuery.isNotEmpty()) {
                 IconButton(onClick = { onSearchQueryChange("") }) {
-                    Icon(Icons.Default.Clear, contentDescription = "Очистить")
+                    Icon(Icons.Default.Clear, contentDescription = "Очистить", tint = MaterialTheme.colorScheme.error)
                 }
             }
         },
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp)),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+            errorTextColor = MaterialTheme.colorScheme.error,
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            disabledContainerColor = MaterialTheme.colorScheme.surface,
+            errorContainerColor = MaterialTheme.colorScheme.surface,
+            cursorColor = MaterialTheme.colorScheme.primary,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+            errorBorderColor = MaterialTheme.colorScheme.error,
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
+            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+            errorLabelColor = MaterialTheme.colorScheme.error
+        )
     )
 }
 
@@ -257,7 +299,19 @@ fun CategoryFilter(
             FilterChip(
                 selected = category == selectedCategory,
                 onClick = { onCategorySelected(category) },
-                label = { Text(category) }
+                label = { Text(category, color = MaterialTheme.colorScheme.onSurface) },
+                leadingIcon = if (category == selectedCategory) {
+                    {
+                        Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    }
+                } else null,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp)),
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    labelColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
     }
@@ -283,46 +337,33 @@ fun NoteItem(
         label = "swipe_animation"
     )
 
-    // 3D effect: shadow, rounded corners, gradient background
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .shadow(
-                elevation = 14.dp,
-                shape = RoundedCornerShape(24.dp),
-                ambientColor = Color(0x44000000),
-                spotColor = Color(0x33000000)
-            )
+            .padding(vertical = 12.dp)
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .offset { IntOffset(animatedOffsetX.roundToInt(), 0) }
-                .clip(RoundedCornerShape(24.dp))
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(note.color.color, Color.White.copy(alpha = 0.7f)),
-                        start = Offset.Zero,
-                        end = Offset(400f, 400f)
-                    )
+                .graphicsLayer(
+                    scaleX = if (highlightPin) 1.03f else 1f,
+                    scaleY = if (highlightPin) 1.03f else 1f
                 )
-                .border(2.dp, note.color.color.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
-                .pointerInput(Unit) {
-                    detectHorizontalDragGestures(
-                        onHorizontalDrag = { _, dragAmount ->
-                            offsetX += dragAmount
-                        },
-                        onDragEnd = {
-                            if (offsetX > 200) onPin()
-                            else if (offsetX < -200) onArchive()
-                            offsetX = 0f
-                        }
-                    )
+                .border(
+                    width = if (highlightPin) 3.dp else 2.dp,
+                    color = if (highlightPin) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                    shape = RoundedCornerShape(24.dp)
+                ),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = when {
+                    highlightPin -> 18.dp
+                    offsetX != 0f -> 14.dp
+                    else -> 10.dp
                 }
-                .clickable { showMenu = true },
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            )
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -331,10 +372,11 @@ fun NoteItem(
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Меню")
+                        Icon(Icons.Default.MoreVert, contentDescription = "Меню", tint = MaterialTheme.colorScheme.onSurface)
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -342,7 +384,8 @@ fun NoteItem(
                     text = note.content,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 6,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -353,10 +396,13 @@ fun NoteItem(
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     IconButton(onClick = { showColorPicker = true }) {
-                        Icon(Icons.Default.Palette, contentDescription = "Цвет заметки")
+                        Icon(Icons.Default.Palette, contentDescription = "Цвет заметки", tint = MaterialTheme.colorScheme.primary)
                     }
                     IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Удалить")
+                        Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = MaterialTheme.colorScheme.error)
+                    }
+                    if (highlightPin) {
+                        Icon(Icons.Default.PushPin, contentDescription = "Закреплено", tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -383,39 +429,29 @@ fun ArchivedNoteItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .shadow(
-                elevation = 10.dp,
-                shape = RoundedCornerShape(20.dp),
-                ambientColor = Color(0x44000000),
-                spotColor = Color(0x33000000)
-            )
+            .padding(vertical = 12.dp)
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(note.color.color, Color.White.copy(alpha = 0.7f)),
-                        start = Offset.Zero,
-                        end = Offset(350f, 350f)
-                    )
-                ),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                .border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp)),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
                     text = note.title,
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = note.content,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
@@ -423,10 +459,10 @@ fun ArchivedNoteItem(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onUnarchive) {
-                        Text("Восстановить")
+                        Text("Восстановить", color = MaterialTheme.colorScheme.primary)
                     }
                     TextButton(onClick = onDelete) {
-                        Text("Удалить")
+                        Text("Удалить", color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -447,29 +483,86 @@ fun AddNoteDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Новая заметка") },
+        title = { Text("Новая заметка", color = MaterialTheme.colorScheme.onSurface) },
         text = {
             Column {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Заголовок") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text("Заголовок", color = MaterialTheme.colorScheme.onSurface) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        errorTextColor = MaterialTheme.colorScheme.error,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface,
+                        errorContainerColor = MaterialTheme.colorScheme.surface,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        errorBorderColor = MaterialTheme.colorScheme.error,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        errorLabelColor = MaterialTheme.colorScheme.error
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = content,
                     onValueChange = { content = it },
-                    label = { Text("Содержимое") },
+                    label = { Text("Содержимое", color = MaterialTheme.colorScheme.onSurface) },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
+                    minLines = 3,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        errorTextColor = MaterialTheme.colorScheme.error,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface,
+                        errorContainerColor = MaterialTheme.colorScheme.surface,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        errorBorderColor = MaterialTheme.colorScheme.error,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        errorLabelColor = MaterialTheme.colorScheme.error
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = selectedCategory,
                     onValueChange = { selectedCategory = it },
-                    label = { Text("Категория") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text("Категория", color = MaterialTheme.colorScheme.onSurface) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        errorTextColor = MaterialTheme.colorScheme.error,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface,
+                        errorContainerColor = MaterialTheme.colorScheme.surface,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        errorBorderColor = MaterialTheme.colorScheme.error,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        errorLabelColor = MaterialTheme.colorScheme.error
+                    )
                 )
             }
         },
@@ -481,12 +574,12 @@ fun AddNoteDialog(
                     }
                 }
             ) {
-                Text("Сохранить")
+                Text("Сохранить", color = MaterialTheme.colorScheme.primary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Отмена")
+                Text("Отмена", color = MaterialTheme.colorScheme.error)
             }
         }
     )
@@ -499,19 +592,19 @@ fun StatisticsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Статистика заметок") },
+        title = { Text("Статистика заметок", color = MaterialTheme.colorScheme.onSurface) },
         text = {
             Column {
-                Text("Всего заметок: ${statistics.totalNotes}")
-                Text("Закрепленных: ${statistics.pinnedNotes}")
-                Text("Архивированных: ${statistics.archivedNotes}")
-                Text("Категорий: ${statistics.categoriesCount}")
-                Text("Среднее слов в заметке: ${statistics.averageWordsPerNote.toInt()}")
+                Text("Всего заметок: ${statistics.totalNotes}", color = MaterialTheme.colorScheme.onSurface)
+                Text("Закрепленных: ${statistics.pinnedNotes}", color = MaterialTheme.colorScheme.onSurface)
+                Text("Архивированных: ${statistics.archivedNotes}", color = MaterialTheme.colorScheme.onSurface)
+                Text("Категорий: ${statistics.categoriesCount}", color = MaterialTheme.colorScheme.onSurface)
+                Text("Среднее слов в заметке: ${statistics.averageWordsPerNote.toInt()}", color = MaterialTheme.colorScheme.onSurface)
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Закрыть")
+                Text("Закрыть", color = MaterialTheme.colorScheme.primary)
             }
         }
     )
@@ -548,7 +641,8 @@ fun ColorPickerDialog(
         title = {
             Text(
                 "Выберите цвет",
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         text = {
@@ -587,7 +681,7 @@ fun ColorPickerDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Готово")
+                Text("Готово", color = MaterialTheme.colorScheme.primary)
             }
         }
     )
